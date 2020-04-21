@@ -196,6 +196,7 @@ def main():
     start_time = time.time()
     flag_update = 0  # if the filter was updated, go to resample
     last_sample_plotted = 0
+    i_plot = 0
     # sample '0' is (0,6,0), I don't have any uncertainty about it. I create the particles from sample '1')
     for c_sample in range(1, dataset_length):
         x = X[c_sample]
@@ -255,10 +256,18 @@ def main():
                         trajectory_lines[i_particle] = ax.plot(trajectory_lines[indexes[i_particle]][0].get_xdata(),
                                                                trajectory_lines[indexes[i_particle]][0].get_ydata())
 
-        for i_particle in range(N_PARTICLES):
-            trajectory_lines[i_particle][0].set_xdata(np.append(trajectory_lines[i_particle][0].get_xdata(), particles[i_particle].x))
-            trajectory_lines[i_particle][0].set_ydata(np.append(trajectory_lines[i_particle][0].get_ydata(), particles[i_particle].y))
-            # plt.pause(0.00000000000000000001)
+        if i_plot == 0:
+            for i_particle in range(N_PARTICLES):
+                trajectory_lines[i_particle][0].set_xdata(np.append(trajectory_lines[i_particle][0].get_xdata(),
+                                                                    np.array(particles[i_particle].t_x[last_sample_plotted:c_sample])))
+                trajectory_lines[i_particle][0].set_ydata(np.append(trajectory_lines[i_particle][0].get_ydata(),
+                                                                    np.array(particles[i_particle].t_y[last_sample_plotted:c_sample])))
+            i_plot = 0
+            # plt.pause(1.e-300)
+            last_sample_plotted = c_sample
+        else:
+            i_plot += 1
+
 
     print("--- % execution time ---" % (time.time() - start_time))
     plt.pause(1)
