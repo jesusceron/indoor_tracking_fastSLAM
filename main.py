@@ -14,7 +14,7 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 seed(20)
-N_PARTICLES = 10
+N_PARTICLES = 100
 N_LM = 5
 LM_SIZE = 2  # landmark positions in (x,y)
 STD_PERSON_POSITION = 0.005
@@ -113,9 +113,9 @@ def neff(weights):
 def resample_from_index(particles, indexes):
 
     # particles_weights.fill(1.0 / N_PARTICLES)
-    for i_particle in reversed(np.arange(1, N_PARTICLES)):
+    for i_particle in reversed(np.arange(0, N_PARTICLES)):
         # particles[i_particle] = copy.deepcopy(particles[indexes[i_particle]])
-        particles[i_particle].w = particles[indexes[i_particle]].w
+        particles[i_particle].w = 1 / N_PARTICLES
         particles[i_particle].x = particles[indexes[i_particle]].x
         particles[i_particle].y = particles[indexes[i_particle]].y
         particles[i_particle].lm = particles[indexes[i_particle]].lm
@@ -196,7 +196,6 @@ def main():
     start_time = time.time()
     flag_update = 0  # if the filter was updated, go to resample
     last_sample_plotted = 0
-    i_plot = 0
     # sample '0' is (0,6,0), I don't have any uncertainty about it. I create the particles from sample '1')
     for c_sample in range(1, dataset_length):
         x = X[c_sample]
@@ -243,8 +242,8 @@ def main():
         if flag_update:
             # resample if too few effective particles
             if neff(particles_weights) < THRESHOLD_RESAMPLE:
-                # indexes = stratified_resample(weights)
-                indexes = systematic_resample(particles_weights)
+                indexes = stratified_resample(particles_weights)
+                # indexes = systematic_resample(particles_weights)
                 particles = resample_from_index(particles, indexes)
                 flag_update = 0
 
@@ -256,18 +255,10 @@ def main():
                         trajectory_lines[i_particle] = ax.plot(trajectory_lines[indexes[i_particle]][0].get_xdata(),
                                                                trajectory_lines[indexes[i_particle]][0].get_ydata())
 
-        if i_plot == 0:
-            for i_particle in range(N_PARTICLES):
-                trajectory_lines[i_particle][0].set_xdata(np.append(trajectory_lines[i_particle][0].get_xdata(),
-                                                                    np.array(particles[i_particle].t_x[last_sample_plotted:c_sample])))
-                trajectory_lines[i_particle][0].set_ydata(np.append(trajectory_lines[i_particle][0].get_ydata(),
-                                                                    np.array(particles[i_particle].t_y[last_sample_plotted:c_sample])))
-            i_plot = 0
-            # plt.pause(1.e-300)
-            last_sample_plotted = c_sample
-        else:
-            i_plot += 1
-
+        for i_particle in range(N_PARTICLES):
+            trajectory_lines[i_particle][0].set_xdata(np.append(trajectory_lines[i_particle][0].get_xdata(), particles[i_particle].x))
+            trajectory_lines[i_particle][0].set_ydata(np.append(trajectory_lines[i_particle][0].get_ydata(), particles[i_particle].y))
+            # plt.pause(0.00000000000000000001)
 
     print("--- % execution time ---" % (time.time() - start_time))
     plt.pause(1)
